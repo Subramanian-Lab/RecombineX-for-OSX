@@ -9,13 +9,13 @@ import global_functions as gf
 
 # Handling input and output files and parameters
 
-parser = argparse.ArgumentParser(description="Process some inputs.")
+parser = argparse.ArgumentParser(description="selecting or excluding fasta sequences")
 
 parser.add_argument('--input_fasta', type=str, help='Tidied fasta file')
 parser.add_argument('--list', type=str, help='Chromosome list')
 parser.add_argument('--output_fasta', type=str, help='Output fasta file')
-parser.add_argument('--selection_mode', type=str, help='Selection mode')
-parser.add_argument('--ranking_order', type=str, help='Ranking order')
+parser.add_argument('--selection_mode', type=str, help='Selection mode ("select" or "exclude". Default = "select")')
+parser.add_argument('--ranking_order', type=str, help='Ranking order ("from_fasta" or "from_list")')
 
 args = parser.parse_args()
 
@@ -37,7 +37,7 @@ with open(chromosome_file, "r") as chr_list_file:
 record_id_list = [record.id for record in SeqIO.parse(tidied_fasta_file, "fasta")] # Contain chromosome id from fasta
 
 # Selecting from the list
-def selecting_from_list(tidy_file_path: str, chromosome_list: list, selection_mode: str):
+def selecting_from_list(tidy_file_path: str, chromosome_list: list, selection_mode = "select"):
     filtered_records = []
     for record in SeqIO.parse(tidy_file_path, "fasta"):
         if selection_mode == "select":
