@@ -6,10 +6,16 @@ This code will tidy up the header of the reference genome file and removing desc
 import re
 import sys
 from Bio import SeqIO
+import argparse
 
-# Input and output files
-genome_file = sys.argv[1]
-tidied_genome_file = sys.argv[2]
+# Managing input and output fasta files
+parser = argparse.ArgumentParser(description="Process some inputs.")
+parser.add_argument('--input_fasta', type="str", help="Input fasta file")
+parser.add_argument('--output_fasta', type="str", help="Input fasta file")
+args = parser.parse_args()
+
+fasta_file = args.input_fasta
+tidied_fasta_file = args.output_fasta
 
 # Tidying up the header
 def tidying_header(record):
@@ -21,7 +27,7 @@ def tidying_header(record):
     record.description = ""
     SeqIO.write(record, output_file, "fasta")
 
-with open(genome_file, "r") as input_file, open(tidied_genome_file, "w") as output_file:
+with open(fasta_file, "r") as input_file, open(tidied_fasta_file, "w") as output_file:
     for record in SeqIO.parse(input_file, "fasta"):
         tidying_header(record)
     print(f"Finished tidying up {len(record)} records")
