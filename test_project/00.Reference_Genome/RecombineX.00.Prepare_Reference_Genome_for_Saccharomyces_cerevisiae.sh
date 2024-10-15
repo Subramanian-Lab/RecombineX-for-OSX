@@ -1,33 +1,41 @@
-#!/bin/bash
+#!/bin/zsh
+
+# Setting pipefail
 set -e -o pipefail
 
-#######################################
 # load environment variables for RecombineX
 source ./../../env.sh
 
-#######################################
-# set project-specific variables
+#################### set project-specific variables ##########################
 
 debug="no" # Whether to keep intermediate files for debuging. Use "yes" if prefer to keep intermediate files, otherwise use "no". Default = "no".
 
-#######################################
+#############################################################################
 
-
-
-######################################
 # process the pipeline
 echo "retrieve sample reference genome data ..."
+
+# Obtaining the reference genome
 wget -c https://downloads.yeastgenome.org/sequence/S288C_reference/genome_releases/S288C_reference_genome_R64-2-1_20150113.tgz
+
+# Unzipping
 tar -xvzf S288C_reference_genome_R64-2-1_20150113.tgz
+
+# Extracting genome.fa and feature.gff files
 cp ./S288C_reference_genome_R64-2-1_20150113/S288C_reference_sequence_R64-2-1_20150113.fsa  SGDref.genome.raw.fa
 cp ./S288C_reference_genome_R64-2-1_20150113/saccharomyces_cerevisiae_R64-2-1_20150113.gff SGDref.all_feature.gff
-perl $RECOMBINEX_HOME/scripts/tidy_SGDref_genome.pl -i SGDref.genome.raw.fa -o SGDref.genome.tidy.fa
-perl $RECOMBINEX_HOME/scripts/select_fasta_by_list.pl -i SGDref.genome.tidy.fa -l $RECOMBINEX_HOME/data/Saccharomyces_cerevisiae.chr_list.txt -o SGDref.genome.fa -m normal
-gzip SGDref.genome.fa
-perl $RECOMBINEX_HOME/scripts/filter_gff_by_feature.pl -i SGDref.all_feature.gff -o SGDref.centromere.gff -f centromere -m keep
 
-# echo "retrieve sample subtelomere GFF files ..."
-# cp $RECOMBINEX_HOME/data/Saccharomyces_cerevisiae_subtelomere_gff3/SGDref.subtelomere.gff .
+# Tidying reference genome
+python $RECOMBINEX_HOME/scripts/tidying_SGD_reference_genome.py --input_fasta SGDref.genome.raw.fa --output_fasta SGDref.genome.tidy.fa
+
+# Selecting fasta from list
+python $RECOMBINEX_HOME/scripts/selecting_chr_from_list.py --input_fasta SGDref.genome.tidy.fa --list $RECOMBINEX_HOME/data/Saccharomyces_cerevisiae.chr_list.txt --output_fasta SGDref.genome.fa --selection_mode select --ranking_order by_fasta
+
+# Zipping genome file
+gzip SGDref.genome.fa
+
+# Selecting features from gff file
+python $RECOMBINEX_HOME/scripts/filtering_gff_by_feature.py --input_fasta SGDref.all_feature.gff --output_fasta SGDref.centromere.gff --feature centromere --mode keep
 
 if [[ $debug = "no" ]]
 then
@@ -51,3 +59,4 @@ then
     exit 0
 fi
 ############################
+

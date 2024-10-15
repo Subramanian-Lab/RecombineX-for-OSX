@@ -9,9 +9,9 @@ from Bio import SeqIO
 import argparse
 
 # Managing input and output fasta files
-parser = argparse.ArgumentParser(description="Process some inputs.")
-parser.add_argument('--input_fasta', type="str", help="Input fasta file")
-parser.add_argument('--output_fasta', type="str", help="Input fasta file")
+parser = argparse.ArgumentParser(description="Tidying SGD fasta file")
+parser.add_argument('--input_fasta', type=str, help="Input fasta file")
+parser.add_argument('--output_fasta', type=str, help="Input fasta file")
 args = parser.parse_args()
 
 fasta_file = args.input_fasta

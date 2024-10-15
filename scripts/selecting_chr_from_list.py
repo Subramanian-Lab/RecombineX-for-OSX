@@ -6,6 +6,7 @@ This code selects or excludes the fasta sequences from a predetermined file and 
 from Bio import SeqIO
 import argparse
 import global_functions as gf
+import sys
 
 # Handling input and output files and parameters
 
@@ -61,13 +62,16 @@ def sorting_from_file(sorting_order: list, filtered_records: list):
 
 if __name__=="__main__":
     # Filtering according to the list
-    filtered_records = selecting_from_list(tidied_fasta_file, chromosome_list, selection_mode)
-    
+    filtered_records_list = selecting_from_list(tidied_fasta_file, chromosome_list, selection_mode)
+
     # Sorting the filtered records
     if ranking_order == "by_fasta":
-        sorted_records = sorting_from_file(record_id_list, filtered_records)
+        sorted_records_list = sorting_from_file(record_id_list, filtered_records_list)
     elif ranking_order == "by_list":
-        sorted_records = sorting_from_file(chromosome_list, filtered_records)
+        sorted_records_list = sorting_from_file(chromosome_list, filtered_records_list)
+    else:
+        print("Error: Invalid ranking order")
+        sys.exit(1)
 
 # Writing to the output file
-SeqIO.write(sorted_records, filtered_output_file, "fasta")
+SeqIO.write(sorted_records_list, filtered_output_file, "fasta")
