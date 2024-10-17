@@ -43,5 +43,5 @@ if __name__=="__main__":
         with open(input_fasta_file, "r") as input_handle:
             switched_records = switching_case(input_handle, case)
     
-    with gzip.open(output_fasta_file, "wt") as output_handle:
+    with open(output_fasta_file, "wt") as output_handle:
         SeqIO.write(switched_records, output_handle, "fasta")
