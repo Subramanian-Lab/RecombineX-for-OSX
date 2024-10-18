@@ -94,14 +94,46 @@ $UCSC_DIR/faToTwoBit -long -noMask ref.genome.hardmask.relabel.fa ref.genome.har
 $UCSC_DIR/twoBitInfo -nBed ref.genome.hardmask.relabel.2bit ref.genome.hardmask.relabel.masking_details.bed
 
 # Determine the GC range for FREEC
-python $RECOMBINEX_HOME/scripts/prepare_genome_for_FREEC.py --input ref.genome.raw.relabel.fa --prefix ref --excluded_list "$excluded_chr_list_for_cnv_profiling"
+python $RECOMBINEX_HOME/scripts/prepare_genome_for_FREEC.py --input_file ref.genome.raw.relabel.fa --prefix ref --excluded_list "$excluded_chr_list_for_cnv_profiling"
 
 # Creating index of FREEC.fa file
 $SAMTOOLS_DIR/samtools faidx ref.FREEC.fa
 
+# Creating windows and calculating, storing GC content for that window
 $BEDTOOLS makewindows -g ref.FREEC.fa.fai -w $window_size > ref.FREEC.window.$window_size.bed
 $BEDTOOLS nuc -fi ref.FREEC.fa -bed ref.FREEC.window.$window_size.bed > ref.FREEC.GC_content.txt
 
+# Calculating GC range for FREEC
+python $RECOMBINEX_HOME/scripts/cal_GC_range_for_FREEC.py --input_file ref.FREEC.GC_content.txt --window_size "$window_size" --lower_quantile "$lower_quantile" --upper_quantile "$upper_quantile" --min_mappability "$min_mappability" --output_file ref.FREEC.GC_range.txt
 
+## Mappability calculation by GEMTOOLS - UNDER CONSTRUCTION
+#$GEMTOOLS_DIR/gemtools index -t $threads -i ref.FREEC.fa -o ref.FREEC.gem
+#$GEMTOOLS_DIR/gem-mappability -T $threads -I ref.FREEC.gem -l $raw_read_length -m 0.02 -e 0.02 -o ref.FREEC
 
+# relabel GFF files
+echo ""
+echo "Relabel the sequence field in the GFF files with the genome_tag prefix..."
 
+if [[ $centromere_gff != "" ]]
+then
+    python $RECOMBINEX_HOME/scripts/relabel_chr_in_gff.py --input_file $centromere_gff --tag ref --output_file ref.centromere.relabel.gff
+fi
+
+# Clean up intermediate files
+if [[ $debug == "no" ]]
+then
+    rm ref.genome.raw.fa
+    rm ref.genome.softmask.relabel.fa
+    rm ref.genome.raw.relabel.masking_library.ustat
+    rm ref.genome.hardmask.relabel.2bit
+fi
+
+# Checking bash exit status
+if [[ $? -eq 0 ]]
+then
+    echo ""
+    echo "RecombineX message: This bash script has been successfully processed! :)"
+    echo ""
+    echo ""
+    exit 0
+fi

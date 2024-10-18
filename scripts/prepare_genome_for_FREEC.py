@@ -65,7 +65,6 @@ if __name__=="__main__":
         chr_num = 1
         new_records = []
         for record in SeqIO.parse(input_handle, "fasta"):
-            print(record.id)
             if record.id in excluded_chr_list:
                 continue
             else:
