@@ -89,6 +89,19 @@ python $RECOMBINEX_HOME/scripts/softmask2hardmask.py --input_file ref.genome.sof
 # Setting up index
 $SAMTOOLS_DIR/samtools faidx ref.genome.hardmask.relabel.fa
 
+# Converting the hard masked fasta file into a 2bit file and extracting the masking information into a bed file
+$UCSC_DIR/faToTwoBit -long -noMask ref.genome.hardmask.relabel.fa ref.genome.hardmask.relabel.2bit
+$UCSC_DIR/twoBitInfo -nBed ref.genome.hardmask.relabel.2bit ref.genome.hardmask.relabel.masking_details.bed
+
+# Determine the GC range for FREEC
+python $RECOMBINEX_HOME/scripts/prepare_genome_for_FREEC.py --input ref.genome.raw.relabel.fa --prefix ref --excluded_list "$excluded_chr_list_for_cnv_profiling"
+
+# Creating index of FREEC.fa file
+$SAMTOOLS_DIR/samtools faidx ref.FREEC.fa
+
+$BEDTOOLS makewindows -g ref.FREEC.fa.fai -w $window_size > ref.FREEC.window.$window_size.bed
+$BEDTOOLS nuc -fi ref.FREEC.fa -bed ref.FREEC.window.$window_size.bed > ref.FREEC.GC_content.txt
+
 
 
 
