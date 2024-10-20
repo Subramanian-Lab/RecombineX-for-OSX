@@ -26,6 +26,7 @@ lower_quantile = args.lower_quantile
 upper_quantile = args.upper_quantile
 min_mappability = args.min_mappability
 
+
 # Calculating the GC statistics
 def computing_gc_statistics(df):
     gc_statistics = {}
@@ -37,7 +38,8 @@ def computing_gc_statistics(df):
         group["effective_window_size"] = group["AT_count"] + group["GC_count"]
         group["effective_ratio"] = group["effective_window_size"] / window_size
 
-        effective_gc_values = group.loc[group["effective_ratio"] > min_mappability, "GC_count"] / group["effective_window_size"]
+        effective_gc_values = group.loc[group["effective_ratio"] > min_mappability, "GC_count"] / group[
+            "effective_window_size"]
         effective_gc_values = effective_gc_values.dropna()
 
         if len(effective_gc_values) >= 10:
@@ -50,8 +52,10 @@ def computing_gc_statistics(df):
 
     return gc_statistics
 
+
 # Running the program
-column_header = ["chr", "window_start", "window_end", "AT_pct", "GC_pct", "A_count", "C_count", "G_count", "T_count", "N_count", "other_count", "window_seq_length"]
+column_header = ["chr", "window_start", "window_end", "AT_pct", "GC_pct", "A_count", "C_count", "G_count", "T_count",
+                 "N_count", "other_count", "window_seq_length"]
 with open(gc_content_file, "rt") as gc_file:
     df = pd.read_csv(gc_file, sep="\t", comment="#", names=column_header)
 
@@ -65,4 +69,3 @@ with open(output_gc_range_file, "wt") as output_handle:
     max_expected_gc = max(stat["upper_quantile"] for stat in gc_statistics.values())
 
     output_handle.write(f"{min_expected_gc:.3f}\t{max_expected_gc:.3f}")
-
