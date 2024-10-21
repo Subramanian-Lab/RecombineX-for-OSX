@@ -163,7 +163,7 @@ $JAVA_DIR/java -Djava.io.tmpdir=./tmp -Dpicard.useLegacyParser=false -XX:Paralle
     -INPUT ${parent1_tag}-ref.ref.rdgrp.bam \
     -REMOVE_DUPLICATES true \
     -METRICS_FILE ${parent1_tag}-ref.ref.dedup.metrics \
-    -OUTPUT ${parent1_tag}-ref.ref.rdgrp.dedup.bam \
+    -OUTPUT ${parent1_tag}-ref.ref.dedup.bam \
 
 # Index the dedup.bam file
 $SAMTOOLS_DIR/samtools index ${parent1_tag}-ref.ref.dedup.bam
@@ -172,3 +172,43 @@ if [[ $debug == "no" ]]
 then
     rm ${parent1_tag}-ref.ref.rdgrp.bam
 fi
+
+## GATK local realign
+
+# Find realigner targets
+$JAVA_DIR/java -Djava.io.tmpdir=./tmp -XX:ParellelGCThreads=$threads -jar $GATK3_DIR/gatk3.jar \
+    -R ref.genome.raw.fa -T IndelRealigner \
+    -I ${parent1_tag}-ref.ref.dedup.bam -targetIntervals ${parent1_tag}-ref.ref.realn.intervals \
+    -T RealignerTargetCreator \
+    -I ${parent1_tag}-ref.ref.dedup.bam  \
+    -o ${parent1_tag}-ref.ref.realn.intervals 
+
+# run realigner
+$java_dir/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $gatk3_dir/gatk3.jar  \
+    -R ref.genome.raw.fa -T IndelRealigner \
+    -I ${parent1_tag}-ref.ref.dedup.bam -targetIntervals ${parent1_tag}-ref.ref.realn.intervals  \
+    -o ${parent1_tag}-ref.ref.realn.bam
+
+if [[ $debug == "no" ]]
+then
+    rm ${parent1_tag}-ref.ref.dedup.bam
+    rm ${parent1_tag}-ref.ref.dedup.bam.bai
+    rm ${parent1_tag}-ref.ref.dedup.matrics
+    rm ${parent1_tag}-ref.ref.realn.intervals
+fi
+
+# Generate SAMtools mpileup
+$SAMTOOLS_DIR/samtools mpileup -C 0 -q $mapping_quality_cutoff -f ref.genome.raw.fa ${parent1_tag}-ref.ref.realn.bam |gzip -c >${parent1_tag}-ref.ref.mpileup.gz
+
+# Calculate per-base depth
+$SAMTOOLS_DIR/samtools depth -aa ${parent1_tag}-ref.ref.realn.bam | gzip -c >${parent1_tag}-ref.ref.depth.txt.gz
+
+# Compute basic alignment statistics by samtools
+$SAMTOOLS_DIR/samtools flagstat ${parent1_tag}-ref.ref.realn.bam >${parent1_tag}-ref.ref.samstat
+
+# Compute insert size statistics
+$JAVA_DIR/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $PICARD_DIR/picard.jar CollectInsertSizeMetrics \
+    I=${parent1_tag}-ref.ref.realn.bam \
+    O=${parent1_tag}-ref.ref.insert_size_metrics.txt \
+    H=${parent1_tag}-ref.ref.insert_size_histogram.pdf \
+    M=0.5
