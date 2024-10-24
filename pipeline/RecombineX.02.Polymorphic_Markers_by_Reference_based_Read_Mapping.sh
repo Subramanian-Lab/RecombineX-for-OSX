@@ -176,15 +176,16 @@ fi
 ## GATK local realign
 
 # Find realigner targets
-$JAVA_DIR/java -Djava.io.tmpdir=./tmp -XX:ParellelGCThreads=$threads -jar $GATK3_DIR/gatk3.jar \
-    -R ref.genome.raw.fa -T IndelRealigner \
-    -I ${parent1_tag}-ref.ref.dedup.bam -targetIntervals ${parent1_tag}-ref.ref.realn.intervals \
+$JAVA_DIR/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $GATK3/gatk3.jar \
+    -nt $threads \
+    -R ref.genome.raw.fa \
     -T RealignerTargetCreator \
-    -I ${parent1_tag}-ref.ref.dedup.bam  \
+    -I ${parent1_tag}-ref.ref.dedup.bam \
     -o ${parent1_tag}-ref.ref.realn.intervals 
 
+echo "Check 2"
 # run realigner
-$java_dir/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $gatk3_dir/gatk3.jar  \
+$JAVA_DIR/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $GATK3/gatk3.jar  \
     -R ref.genome.raw.fa -T IndelRealigner \
     -I ${parent1_tag}-ref.ref.dedup.bam -targetIntervals ${parent1_tag}-ref.ref.realn.intervals  \
     -o ${parent1_tag}-ref.ref.realn.bam
@@ -193,7 +194,7 @@ if [[ $debug == "no" ]]
 then
     rm ${parent1_tag}-ref.ref.dedup.bam
     rm ${parent1_tag}-ref.ref.dedup.bam.bai
-    rm ${parent1_tag}-ref.ref.dedup.matrics
+    rm ${parent1_tag}-ref.ref.dedup.metrics
     rm ${parent1_tag}-ref.ref.realn.intervals
 fi
 
@@ -212,3 +213,20 @@ $JAVA_DIR/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $PICAR
     O=${parent1_tag}-ref.ref.insert_size_metrics.txt \
     H=${parent1_tag}-ref.ref.insert_size_histogram.pdf \
     M=0.5
+
+# Calculating read mapping coverage statistics
+python $RECOMBINEX_HOME/scripts/summarize_mapping_coverage.py \
+    --genome_file ref.genome.raw.fa \
+    --samstat_file ${parent1_tag}-ref.ref.samstat \
+    --depth_file ${parent1_tag}-ref.ref.depth.txt.gz \
+    --min_depth_cutoff 5 \
+    --tag $parent1_tag \
+    --output_file ${parent1_tag}-ref.ref.coverage_summary.txt
+
+# Scan for CV using FREEC
+parent1_raw_read_length=100
+step_size=$window_size
+min_expected_gc=$(cat ./../$reference_genome_preprocessing_dir/ref.FREEC.GC_range.txt | egrep -v "#" | cut -f 1)
+max_expected_gc=$(cat ./../$reference_genome_preprocessing_dir/ref.FREEC.GC_range.txt | egrep -v "#" | cut -f 2)
+echo "min_expected_gc=$min_expected_gc, max_expected_gc=$max_expected_gc";
+
