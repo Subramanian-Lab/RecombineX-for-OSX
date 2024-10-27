@@ -14,3 +14,4 @@ export JAVA_DIR="/Library/Java/JavaVirtualMachines/adoptopenjdk-8.jdk/Contents/H
 export PICARD_DIR="$BUILD_DIR/Picard-v2.19.0"
 export BWA_DIR="$BUILD_DIR/bwa-0.7.18"
 export GATK3="$BUILD_DIR/GATK3"
+export FREEC="$BUILD_DIR/FREEC-11.6b"

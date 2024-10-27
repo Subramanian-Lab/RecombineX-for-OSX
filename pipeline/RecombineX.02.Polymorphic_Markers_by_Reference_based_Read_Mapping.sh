@@ -22,7 +22,7 @@ apply_CNV_filter="yes" # Whether to apply CNV filter marker candidates. Set this
 ploidy=1 # The ploidy of the parental genome. (e.g. "1" for haploid and "2" for diploid). For diploid parents, only homozygous SNPs will be used as markers. If the parental genome is purely homozygous, it is recommended to set "ploidy=1" to maximize the power of CNV profiling. Default = "1".
 window_size=250 # The window size for the non-overlapping sliding-window-based CNV profiling. Default = 250 (i.e. 250 bp). 
 threads=4 # The number of threads to use. Default = "4"
-debug="no" # Whether to keep intermediate files for debugging.
+debug="yes" # Whether to keep intermediate files for debugging.
 
 # Processing the pipeline
 reference_genome_preprocessing_dir="./../01.Reference_Genome_Preprocessing" # The path to the 01.Reference_Genome_Preprocessing dir.
@@ -215,7 +215,7 @@ $JAVA_DIR/java -Djava.io.tmpdir=./tmp -XX:ParallelGCThreads=$threads -jar $PICAR
     M=0.5
 
 # Calculating read mapping coverage statistics
-python $RECOMBINEX_HOME/scripts/summarize_mapping_coverage.py \
+python $RECOMBINEX_HOME/scripts/summarise_mapping_coverage.py \
     --genome_file ref.genome.raw.fa \
     --samstat_file ${parent1_tag}-ref.ref.samstat \
     --depth_file ${parent1_tag}-ref.ref.depth.txt.gz \

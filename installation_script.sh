@@ -57,3 +57,7 @@ make clean all
 
 This solves the gcc error in mac
 
+# gcc error for FREEC
+https://cmichel.io/fixing-cpp-compilation-bugs-for-the-mac-os-catalina-upgrade/
+
+
